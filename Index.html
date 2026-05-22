@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suntan Smash - Voli Pantai</title>
+    <!-- Tailwind CSS untuk tata letak modern dan responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght=400;600;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #0f172a;
+        }
+        
+        .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Mencegah zoom saat ketuk ganda pada perangkat layar sentuh */
+        canvas {
+            touch-action: none;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Kustomisasi scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-100 select-none overflow-x-hidden">
+
+    <!-- Header atas -->
+    <header class="bg-slate-900/80 border-b border-slate-800 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-amber-400 to-orange-500 p-2.5 rounded-2xl shadow-lg shadow-orange-500/20 animate-pulse">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="title-font text-2xl tracking-wide bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 bg-clip-text text-transparent">
+                        SUNTAN SMASH
+                    </h1>
+                    <p class="text-[10px] uppercase tracking-widest text-orange-400/80 font-bold -mt-1">Voli Pantai</p>
+                </div>
+            </div>
+
+            <!-- Kontrol Suara & Aturan -->
+            <div class="flex items-center gap-3">
+                <button id="muteBtn" class="p-2.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-xl transition duration-150 relative">
+                    <i data-lucide="volume-2" class="w-5 h-5" id="muteIcon"></i>
+                </button>
+                <button id="rulesBtn" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition duration-150">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Area Game Utama -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-6xl mx-auto w-full gap-4">
+        
+        <!-- Papan Skor -->
+        <div id="gameScoreboard" class="hidden w-full max-w-4xl bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex justify-between items-center shadow-2xl backdrop-blur-md">
+            <!-- Pemain 1 -->
+            <div class="flex items-center gap-4 w-1/3">
+                <div class="w-12 h-12 rounded-full border-2 border-cyan-400 bg-cyan-950 flex items-center justify-center text-xl">🏖️</div>
+                <div>
+                    <div class="font-bold text-slate-300 text-sm md:text-base" id="p1NameDisplay">Anda</div>
+                    <div class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider w-max border border-cyan-500/20 mt-0.5" id="p1RoleTag">Pemain 1</div>
+                </div>
+                <div class="ml-auto text-4xl font-extrabold title-font text-cyan-400" id="p1Score">0</div>
+            </div>
+
+            <!-- Batas Poin -->
+            <div class="flex flex-col items-center justify-center px-4 border-x border-slate-800 w-1/4">
+                <span class="text-xs uppercase font-bold text-slate-500 tracking-wider">TARGET POIN</span>
+                <span class="text-lg font-black text-amber-500 title-font" id="winScoreDisplay">21</span>
+            </div>
+
+            <!-- Pemain 2 / CPU -->
+            <div class="flex items-center gap-4 w-1/3 flex-row-reverse">
+                <div class="w-12 h-12 rounded-full border-2 border-pink-500 bg-pink-950 flex items-center justify-center text-xl" id="p2AvatarDisplay">🍹</div>
+                <div class="text-right">
+                    <div class="font-bold text-slate-300 text-sm md:text-base" id="p2NameDisplay">CPU (Sedang)</div>
+                    <div class="text-[10px] bg-pink-500/10 text-pink-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider w-max ml-auto border border-pink-500/20 mt-0.5" id="p2RoleTag">Lawan</div>
+                </div>
+                <div class="mr-auto text-4xl font-extrabold title-font text-pink-500" id="p2Score">0</div>
+            </div>
+        </div>
+
+        <!-- Wadah Canvas -->
+        <div class="relative w-full max-w-4xl aspect-[16/9] bg-slate-950 rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-800 flex items-center justify-center">
+            
+            <!-- Game Canvas -->
+            <canvas id="gameCanvas" width="800" height="450" class="w-full h-full object-contain"></canvas>
+
+            <!-- Tombol Keluar dari Pertandingan (Hanya muncul di kanan atas saat gameActive) -->
+            <button id="btnExitMatch" class="hidden absolute top-4 right-4 z-10 bg-slate-900/80 hover:bg-red-600/95 border border-slate-700/60 hover:border-red-500/50 backdrop-blur-sm text-slate-100 hover:text-white font-bold py-1.5 px-3 rounded-xl text-xs transition duration-150 active:scale-95 flex items-center gap-1.5 shadow-lg">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Keluar
+            </button>
+
+            <!-- Menu Tampilan Depan -->
+            <div id="menuOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-20 transition-all duration-300">
+                <div class="text-center max-w-md w-full animate-fade-in overflow-y-auto max-h-[90%] px-2">
+                    <h2 class="title-font text-4xl md:text-5xl text-amber-400 mb-2 drop-shadow-[0_4px_12px_rgba(245,158,11,0.3)]">SUNTAN SMASH</h2>
+                    <p class="text-slate-400 text-xs md:text-sm mb-6">Ambil kacamata hitammu dan rasakan hangatnya pasir dalam pertarungan voli pantai fisik yang seru dan menegangkan!</p>
+
+                    <!-- Panel Pengaturan Game -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-5 text-left shadow-xl space-y-4">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-2 flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-4 h-4 text-amber-500"></i> Pengaturan Pertandingan
+                        </h3>
+                        
+                        <!-- Mode Game -->
+                        <div>
+                            <label class="text-xs text-slate-400 font-bold block mb-1.5">Mode Permainan</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button id="modeCpu" class="py-2.5 px-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 text-amber-400 font-bold text-[11px] flex items-center justify-center gap-1 transition duration-150">
+                                    👤 CPU
+                                </button>
+                                <button id="modeLocal" class="py-2.5 px-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center justify-center gap-1 transition duration-150">
+                                    👥 Lokal
+                                </button>
+                                <button id="modeOnline" class="py-2.5 px-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center justify-center gap-1 transition duration-150">
+                                    🌐 Online
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PANEL ONLINE MULTIPLAYER -->
+                        <div id="onlinePanel" class="hidden border border-amber-500/20 bg-amber-500/5 rounded-xl p-3 space-y-3">
+                            <span class="text-xs font-bold text-amber-400 block border-b border-amber-500/10 pb-1">🌐 Lobi Pertandingan Online</span>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="btnCreateRoom" class="py-2 px-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs rounded-lg active:scale-95 transition">
+                                    Buat Room Baru
+                                </button>
+                                <button id="btnJoinRoomToggle" class="py-2 px-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold rounded-lg active:scale-95 transition">
+                                    Gabung Room
+                                </button>
+                            </div>
+
+                            <!-- Tombol Shortcut ID Khusus -->
+                            <div class="flex flex-col gap-1.5 pt-1">
+                                <button id="btnShortcutId" class="w-full py-1.5 bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 font-bold text-[11px] rounded-lg transition active:scale-95">
+                                    Gunakan ID Khusus: 1324567
+                                </button>
+                            </div>
+
+                            <!-- Area ID Room Buatan -->
+                            <div id="roomCreatedArea" class="hidden bg-slate-950/80 border border-slate-800 p-2.5 rounded-lg space-y-2">
+                                <span class="text-[10px] text-slate-400 block">Bagikan ID ini ke lawan Anda:</span>
+                                <div class="flex items-center justify-between bg-slate-900 p-1.5 rounded-md border border-slate-700">
+                                    <span id="displayRoomId" class="text-lg font-black tracking-widest text-amber-400 pl-2">----</span>
+                                    <button id="btnCopyRoomId" class="p-1 bg-slate-800 hover:bg-slate-700 rounded text-[11px] text-slate-300 font-bold flex items-center gap-1">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin
+                                    </button>
+                                </div>
+                                <span id="lobbyStatus" class="text-[10px] text-orange-400 font-semibold block animate-pulse">Menunggu lawan bergabung...</span>
+                            </div>
+
+                            <!-- Area Input Gabung Room -->
+                            <div id="roomJoinArea" class="hidden bg-slate-950/80 border border-slate-800 p-2.5 rounded-lg space-y-2">
+                                <span class="text-[10px] text-slate-400 block">Masukkan ID Room teman Anda:</span>
+                                <div class="flex gap-2">
+                                    <input type="text" id="inputRoomId" placeholder="Contoh: 1234" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-center font-bold tracking-widest text-amber-400 focus:outline-none focus:border-amber-500">
+                                    <button id="btnSubmitJoinRoom" class="bg-amber-500 text-slate-950 px-4 py-1 rounded-lg text-xs font-black">
+                                        Masuk
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kesulitan CPU -->
+                        <div id="cpuSettings" class="transition duration-200">
+                            <label class="text-xs text-slate-400 font-bold block mb-1.5">Kesulitan CPU</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button class="diffBtn py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-700 hover:bg-slate-700 transition" data-diff="easy">Mudah</button>
+                                <button class="diffBtn py-2 rounded-lg bg-amber-500/15 text-amber-400 font-bold text-xs border-2 border-amber-500/40 hover:bg-amber-500/20 transition" data-diff="medium">Sedang</button>
+                                <button class="diffBtn py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-700 hover:bg-slate-700 transition" data-diff="hard">Sulit</button>
+                            </div>
+                        </div>
+
+                        <!-- Batas Poin -->
+                        <div id="ptsContainer">
+                            <label class="text-xs text-slate-400 font-bold block mb-1.5">Batas Poin Kemenangan</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button class="ptsBtn py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-700 hover:bg-slate-700 transition" data-pts="11">11 Poin</button>
+                                <button class="ptsBtn py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-700 hover:bg-slate-700 transition" data-pts="15">15 Poin</button>
+                                <button class="ptsBtn py-2 rounded-lg bg-amber-500/15 text-amber-400 font-bold text-xs border-2 border-amber-500/40 hover:bg-amber-500/20 transition" data-pts="21">21 Poin</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Mulai Game -->
+                    <button id="startGameBtn" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-lg py-4 px-6 rounded-2xl shadow-lg shadow-orange-500/20 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150 title-font tracking-wide">
+                        MULAI SERVIS 🏐
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tampilan Selesai Game -->
+            <div id="gameOverOverlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-20">
+                <div class="text-center max-w-sm w-full animate-bounce-in">
+                    <!-- Mahkota Pemenang -->
+                    <div class="text-6xl mb-4" id="victoryEmoji">🏆</div>
+                    <h2 class="title-font text-3xl text-amber-400 mb-1" id="victoryHeader">PEMAIN 1 MENANG!</h2>
+                    <p class="text-slate-400 text-sm mb-6" id="victorySub">Permainan voli pantai yang sangat luar biasa!</p>
+
+                    <div class="space-y-3">
+                        <button id="rematchBtn" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold py-3 px-6 rounded-xl transition duration-150 shadow-md">
+                            Main Lagi
+                        </button>
+                        <button id="menuReturnBtn" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-3 px-6 rounded-xl transition duration-150">
+                            Kembali ke Menu Utama
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tampilan Jeda (Pause) -->
+            <div id="pauseOverlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-20">
+                <div class="text-center">
+                    <h2 class="title-font text-4xl text-amber-400 mb-6">GAME DIJEDA</h2>
+                    <button id="resumeBtn" class="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold px-8 py-3 rounded-xl hover:from-amber-400 hover:to-orange-400 transform transition active:scale-95">
+                        Lanjutkan Pertandingan
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Panduan Cara Bermain -->
+            <div id="rulesOverlay" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-sm p-6 overflow-y-auto flex items-center justify-center z-30">
+                <div class="max-w-md w-full bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-2xl relative">
+                    <button id="closeRulesBtn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-200">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                    <h3 class="title-font text-2xl text-amber-400 mb-4 flex items-center gap-2">🏖️ Cara Bermain</h3>
+                    
+                    <div class="space-y-4 text-sm text-slate-300 mb-6">
+                        <div>
+                            <span class="font-bold text-orange-400 block mb-1">🎮 Pemain Biru (Kontrol P1)</span>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">A</kbd> / <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">←</kbd> Gerak Kiri
+                                <span class="text-slate-500">|</span>
+                                <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">D</kbd> / <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">→</kbd> Gerak Kanan
+                                <span class="text-slate-500">|</span>
+                                <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">W</kbd> / <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">↑</kbd> Lompat
+                            </div>
+                        </div>
+                        <div>
+                            <span class="font-bold text-pink-400 block mb-1">👥 Pemain Merah Muda (Kontrol P2 - Mode Lokal)</span>
+                            <div class="flex flex-wrap gap-2 items-center">
+                                <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">J</kbd> Gerak Kiri
+                                <span class="text-slate-500">|</span>
+                                <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">L</kbd> Gerak Kanan
+                                <span class="text-slate-500">|</span>
+                                <kbd class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs">I</kbd> Lompat
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-800 pt-3">
+                            <span class="font-bold text-amber-400 block mb-1">🏐 Aturan Pasir Pantai</span>
+                            <ul class="list-disc list-inside space-y-1 text-xs">
+                                <li>Lapangan dibagi menjadi dua sisi oleh net di bagian tengah.</li>
+                                <li>Pukul bola melewati net ke area lawan untuk mencetak poin.</li>
+                                <li>Setiap tim hanya boleh menyentuh bola maksimum 3 kali sebelum dihantar melewati jaring.</li>
+                                <li>Garis putih di atas pasir menandakan batas lapangan (di luar garis = OUT).</li>
+                                <li>Jika poin imbang mencapai target (seperti 20-20), aturan Jus (Deuce) aktif dan harus menang selisih 2 poin!</li>
+                                <li>Jika bola menyentuh pasir di area Anda sendiri, lawan mendapatkan poin.</li>
+                                <li>Lakukan smash keras dengan melompat dan menghantam bola di udara!</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tag Informasi Selama Bermain (Notifikasi servis, dll) -->
+            <div id="gameNotice" class="absolute top-16 left-1/2 transform -translate-x-1/2 bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold px-4 py-1.5 rounded-full text-xs uppercase tracking-widest hidden transition-all duration-300">
+                P1 Servis
+            </div>
+
+            <!-- Tombol Kontrol Layar Sentuh Mobile -->
+            <div id="mobileControls" class="hidden absolute inset-x-0 bottom-4 px-6 flex justify-between items-center pointer-events-none z-10">
+                <!-- Kontrol Tangan Kiri (Arah P1) -->
+                <div class="flex gap-3 pointer-events-auto">
+                    <button id="btnTouchLeft" class="w-16 h-16 rounded-full bg-slate-900/60 hover:bg-slate-900/80 active:scale-90 border border-slate-700/50 flex items-center justify-center text-slate-200 text-2xl select-none">
+                        ←
+                    </button>
+                    <button id="btnTouchRight" class="w-16 h-16 rounded-full bg-slate-900/60 hover:bg-slate-900/80 active:scale-90 border border-slate-700/50 flex items-center justify-center text-slate-200 text-2xl select-none">
+                        →
+                    </button>
+                </div>
+                <!-- Kontrol Tangan Kanan (Lompat P1) -->
+                <div class="pointer-events-auto">
+                    <button id="btnTouchJump" class="w-16 h-16 rounded-full bg-slate-900/60 hover:bg-slate-900/80 active:scale-90 border border-slate-700/50 flex items-center justify-center text-slate-200 font-bold text-sm select-none">
+                        LOMPAT
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tombol Pintas & Informasi Kinerja -->
+        <div class="flex justify-between w-full max-w-4xl text-slate-500 text-xs px-2">
+            <div class="flex gap-4">
+                <span>⌨️ <span class="font-semibold text-slate-400">Esc / P</span> untuk Jeda</span>
+                <span>🔄 <span class="font-semibold text-slate-400">R</span> untuk Mengulang Cepat</span>
+            </div>
+            <span class="hidden md:inline">🔥 Simulasi Fisika Voli Pantai 60 FPS</span>
+        </div>
+    </main>
+
+    <!-- Kaki Halaman (Footer) -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-6 text-center text-slate-500 text-sm mt-auto">
+        <div class="max-w-6xl mx-auto px-4">
+            <p>© 2026 Suntan Smash. Dibuat menggunakan HTML5 Canvas & Web Audio API.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Library Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- KONFIGURASI FIREBASE ---
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // State Autentikasi
+        let currentUser = null;
+        let onlineRoomId = null;
+        let isOnlineHost = false; // true = P1 (Pembuat Room), false = P2 (Gabung Room)
+        let roomUnsubscribe = null;
+
+        // Target interpolasi real-time untuk memperhalus lag jaringan
+        let netTargetBall = { x: 200, y: 120, vx: 0, vy: 0 };
+        let netTargetP1 = { x: 180, y: 250, vx: 0, vy: 0 };
+        let netTargetP2 = { x: 620, y: 250, vx: 0, vy: 0 };
+
+        // Pembatasan penulisan database (Throttling) - update setiap 80ms (12.5 FPS)
+        let lastFirebaseUpdate = 0;
+        const FIREBASE_THROTTLE = 80;
+
+        // --- ABA-ABA AMBIL STATE AUTENTIKASI ---
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Gagal melakukan login Firebase: ", err);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                console.log("Terotentikasi secara aman dengan UID: ", user.uid);
+            }
+        });
+
+        initAuth();
+
+        // Bind global variables ke window agar class dan script di luar bisa mengakses
+        window.db = db;
+        window.appId = appId;
+        window.getRoomId = () => onlineRoomId;
+        window.getIsHost = () => isOnlineHost;
+        window.getCurrentUser = () => currentUser;
+
+        // --- SINTESIS EFEK SUARA (Web Audio API Synthesizer) ---
+        class AudioSynth {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            }
+
+            playJump() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.15);
+                
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playHit() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(250, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.12);
+                
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+
+            playScore() {
+                if (this.muted) return;
+                this.init();
+                const playChime = (freq, delay, dur) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + delay + dur);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + delay);
+                    osc.stop(this.ctx.currentTime + delay + dur);
+                };
+                
+                playChime(523.25, 0, 0.15); // C5
+                playChime(659.25, 0.1, 0.15); // E5
+                playChime(783.99, 0.2, 0.3); // G5
+            }
+
+            playWhip() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.08);
+                
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            // SINTESIS SUARA PELUIT WASIT (Referee Whistle)
+            playWhistle(type) {
+                if (this.muted) return;
+                this.init();
+
+                const playBlast = (frequency, delay, duration, rampTo) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const vibrato = this.ctx.createOscillator();
+                    const vibratoGain = this.ctx.createGain();
+
+                    // Vibrato berkecepatan tinggi mereplikasi bola kecil dalam peluit
+                    vibrato.frequency.value = 35;
+                    vibratoGain.gain.value = 35;
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(frequency, this.ctx.currentTime + delay);
+                    if (rampTo) {
+                        osc.frequency.exponentialRampToValueAtTime(rampTo, this.ctx.currentTime + delay + duration);
+                    }
+
+                    gain.gain.setValueAtTime(0, this.ctx.currentTime + delay);
+                    gain.gain.linearRampToValueAtTime(0.15, this.ctx.currentTime + delay + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + delay + duration);
+
+                    vibrato.connect(vibratoGain);
+                    vibratoGain.connect(osc.frequency);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    vibrato.start(this.ctx.currentTime + delay);
+                    osc.start(this.ctx.currentTime + delay);
+
+                    vibrato.stop(this.ctx.currentTime + delay + duration);
+                    osc.stop(this.ctx.currentTime + delay + duration);
+                };
+
+                if (type === 'serve') {
+                    playBlast(1300, 0, 0.35);
+                } else if (type === 'in') {
+                    playBlast(1500, 0, 0.15);
+                    playBlast(1500, 0.18, 0.15);
+                } else if (type === 'out') {
+                    playBlast(1100, 0, 0.6, 700);
+                }
+            }
+        }
+
+        const audio = new AudioSynth();
+
+        // --- PARAMETER GAME & PENGATURAN AWAL ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const GRAVITY = 0.25;
+        const FRICTION_X = 0.85;
+
+        // Warna-warni Elemen
+        const COLOR_P1 = '#22d3ee'; // Sian
+        const COLOR_P2 = '#f43f5e'; // Merah Muda
+        const COLOR_SAND = '#f59e0b'; // Pasir Emas
+        const COLOR_NET = '#ffffff';
+
+        let gameMode = 'cpu';
+        let cpuDifficulty = 'medium';
+        let winningScore = 21;
+        
+        let scoreP1 = 0;
+        let scoreP2 = 0;
+        let p1Touches = 0; // PENGHITUNG SENTUHAN PEMAIN 1
+        let p2Touches = 0; // PENGHITUNG SENTUHAN PEMAIN 2 / CPU
+        let lastTouchBy = 0; // Melacak siapa penyentuh bola terakhir (1 = P1, 2 = P2)
+        let isPaused = false;
+        let gameActive = false;
+        let serviceTurn = 1; // 1 = P1 Servis, 2 = P2 Servis
+
+        // Sistem Partikel
+        let particles = [];
+
+        function createScoreExplosion(x, y, color) {
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 4,
+                    radius: Math.random() * 4 + 2,
+                    color: color,
+                    alpha: 1,
+                    decay: Math.random() * 0.02 + 0.01
+                });
+            }
+        }
+
+        function createHitSparks(x, y) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6 - 2,
+                    radius: Math.random() * 2 + 1,
+                    color: '#ffffff',
+                    alpha: 1,
+                    decay: 0.04
+                });
+            }
+        }
+
+        // --- KELAS OBJEK PERMAINAN (PEMAIN & BOLA) ---
+        class Player {
+            constructor(x, y, isLeft) {
+                this.startX = x;
+                this.startY = y;
+                this.x = x;
+                this.y = y;
+                this.radius = 42; // Batas deteksi tabrakan fisik sferis
+                this.vx = 0;
+                this.vy = 0;
+                this.speed = 4.5;
+                this.jumpStrength = -8.5;
+                this.isLeft = isLeft;
+                this.isGrounded = false;
+                
+                this.eyeBlinkTimer = Math.random() * 200 + 100;
+            }
+
+            reset() {
+                this.x = this.startX;
+                this.y = this.startY;
+                this.vx = 0;
+                this.vy = 0;
+                this.isGrounded = false;
+            }
+
+            update(limits) {
+                // Gravitasi
+                this.vy += GRAVITY;
+                
+                // Perbarui Posisi
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Batas Tanah Pasir
+                const groundY = 400 - this.radius;
+                if (this.y >= groundY) {
+                    this.y = groundY;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                } else {
+                    this.isGrounded = false;
+                }
+
+                // Batas Kiri & Kanan Lapangan
+                if (this.x < limits.left + this.radius) {
+                    this.x = limits.left + this.radius;
+                    this.vx = 0;
+                }
+                if (this.x > limits.right - this.radius) {
+                    this.x = limits.right - this.radius;
+                    this.vx = 0;
+                }
+
+                // Redam kecepatan berjalan dengan gesekan perlahan
+                this.vx *= FRICTION_X;
+
+                // Hitung kedipan mata
+                this.eyeBlinkTimer--;
+                if (this.eyeBlinkTimer <= 0) {
+                    this.eyeBlinkTimer = Math.random() * 300 + 100;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                const skinColor = '#fed7aa'; // Warna kulit cokelat pantai hangat
+                const clothingColor = this.isLeft ? COLOR_P1 : COLOR_P2; // Warna kaos tim
+                const shortsColor = '#1e293b'; // Warna celana hitam/biru gelap
+                const faceDirection = this.isLeft ? 1 : -1;
+
+                // --- BAGIAN KAKI (LEGS) ---
+                ctx.lineWidth = 4.5;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = skinColor;
+
+                let legSwing = 0;
+                if (!this.isGrounded) {
+                    legSwing = 0.5; // Pose melompat (kaki ditekuk)
+                } else if (Math.abs(this.vx) > 0.2) {
+                    legSwing = Math.sin(Date.now() * 0.015) * 0.6; // Animasi berlari
+                }
+
+                // Kaki Kiri
+                ctx.beginPath();
+                ctx.moveTo(this.x - 7, this.y + 15);
+                if (!this.isGrounded) {
+                    ctx.lineTo(this.x - 14, this.y + 25);
+                    ctx.lineTo(this.x - 8, this.y + 36);
+                } else {
+                    ctx.lineTo(this.x - 7 + legSwing * 10, this.y + 38);
+                }
+                ctx.stroke();
+
+                // Kaki Kanan
+                ctx.beginPath();
+                ctx.moveTo(this.x + 7, this.y + 15);
+                if (!this.isGrounded) {
+                    ctx.lineTo(this.x + 14, this.y + 25);
+                    ctx.lineTo(this.x + 20, this.y + 36);
+                } else {
+                    ctx.lineTo(this.x + 7 - legSwing * 10, this.y + 38);
+                }
+                ctx.stroke();
+
+                // Sandal / Telapak Kaki
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.arc(this.x - 7 + (this.isGrounded ? legSwing * 10 : -6), this.y + 38, 4, 0, Math.PI * 2);
+                ctx.arc(this.x + 7 - (this.isGrounded ? legSwing * 10 : -12), this.y + 38, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // --- BAGIAN BADAN DAN BAJU (TORSO & JERSEY) ---
+                ctx.fillStyle = clothingColor;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(this.x - 13, this.y - 12, 26, 28, 6);
+                } else {
+                    ctx.rect(this.x - 13, this.y - 12, 26, 28);
+                }
+                ctx.fill();
+
+                // Celana Pendek Pantai (Swim Trunks)
+                ctx.fillStyle = shortsColor;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(this.x - 14, this.y + 10, 28, 9, [0, 0, 4, 4]);
+                } else {
+                    ctx.rect(this.x - 14, this.y + 10, 28, 9);
+                }
+                ctx.fill();
+
+                // Tali sabuk dekorasi jersey
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(this.x - 13, this.y - 4);
+                ctx.lineTo(this.x + 13, this.y - 4);
+                ctx.stroke();
+
+                // --- BAGIAN LENGAN TANGAN (ARMS) ---
+                ctx.strokeStyle = skinColor;
+                ctx.lineWidth = 4.5;
+                
+                // Deteksi lengan otomatis ke atas saat mendekati bola atau melompat
+                let armYTarget = this.y + 8;
+                let armXTargetL = this.x - 18;
+                let armXTargetR = this.x + 18;
+
+                const distToBall = Math.sqrt((ball.x - this.x)**2 + (ball.y - this.y)**2);
+                if (distToBall < 120 || !this.isGrounded) {
+                    armYTarget = this.y - 25; // Angkat tangan tinggi-tinggi untuk bersiap smash!
+                    armXTargetL = this.x - 10;
+                    armXTargetR = this.x + 10;
+                }
+
+                // Lengan Kiri
+                ctx.beginPath();
+                ctx.moveTo(this.x - 13, this.y - 8);
+                ctx.lineTo(armXTargetL, armYTarget);
+                ctx.stroke();
+
+                // Lengan Kanan
+                ctx.beginPath();
+                ctx.moveTo(this.x + 13, this.y - 8);
+                ctx.lineTo(armXTargetR, armYTarget);
+                ctx.stroke();
+
+                // Telapak Tangan
+                ctx.fillStyle = skinColor;
+                ctx.beginPath();
+                ctx.arc(armXTargetL, armYTarget, 4.5, 0, Math.PI * 2);
+                ctx.arc(armXTargetR, armYTarget, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // --- KEPALA & LEHER ---
+                ctx.fillStyle = skinColor;
+                ctx.fillRect(this.x - 4, this.y - 18, 8, 8);
+
+                // Kepala Sferis Chibi
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - 24, 13, 0, Math.PI * 2);
+                ctx.fillStyle = skinColor;
+                ctx.fill();
+
+                // Rambut Karakter (Pemain 1: Cokelat, Pemain 2: Pirang)
+                ctx.fillStyle = this.isLeft ? '#78350f' : '#f59e0b';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - 30, 12, Math.PI, 0);
+                ctx.fill();
+                ctx.fillRect(this.x - 12, this.y - 30, 4, 8);
+                ctx.fillRect(this.x + 8, this.y - 30, 4, 8);
+
+                // Mata (Selalu menghadap ke arah net netral)
+                const eyeX = this.x + (5 * faceDirection);
+                const eyeY = this.y - 25;
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                
+                if (this.eyeBlinkTimer < 10) {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(eyeX - 4, eyeY);
+                    ctx.lineTo(eyeX + 4, eyeY);
+                    ctx.stroke();
+                } else {
+                    ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Pupil
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(eyeX + (1 * faceDirection), eyeY, 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Senyuman Mulut Ceria / Pose Mulut Saat Menghantam Bola
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                if (distToBall < 90) {
+                    ctx.fillStyle = '#ef4444'; // Mulut terbuka kaget/bersemangat
+                    ctx.arc(this.x + (4 * faceDirection), this.y - 18, 3, 0, Math.PI, false);
+                    ctx.fill();
+                } else {
+                    ctx.arc(this.x + (4 * faceDirection), this.y - 20, 3, 0, Math.PI, false); // Senyuman santai
+                    ctx.stroke();
+                }
+
+                // --- AKSESORIS FUN (TOPI & KACAMATA) ---
+                if (this.isLeft) {
+                    // Topi visor kuning keren untuk Pemain 1
+                    ctx.fillStyle = '#eab308';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y - 30, 11, Math.PI * 1.1, Math.PI * 1.9);
+                    ctx.fill();
+                    ctx.strokeStyle = '#eab308';
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y - 33);
+                    ctx.lineTo(this.x + 22, this.y - 26);
+                    ctx.stroke();
+                } else {
+                    // Kacamata hitam olahraga ungu neon untuk Pemain 2/CPU
+                    ctx.fillStyle = '#a855f7';
+                    ctx.beginPath();
+                    if (ctx.roundRect) {
+                        ctx.roundRect(eyeX - 8, eyeY - 4, 15, 6, 2);
+                    } else {
+                        ctx.rect(eyeX - 8, eyeY - 4, 15, 6);
+                    }
+                    ctx.fill();
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(eyeX - 6, eyeY - 2, 4, 3);
+                    ctx.fillRect(eyeX + 2, eyeY - 2, 4, 3);
+                }
+
+                ctx.restore();
+            }
+        }
+
+        class Ball {
+            constructor() {
+                this.radius = 16;
+                this.reset(1); // Mulai disajikan di sisi kiri
+            }
+
+            reset(serveSide) {
+                this.x = serveSide === 1 ? 200 : 600;
+                this.y = 120;
+                this.vx = 0;
+                this.vy = 0.5;
+                this.rotation = 0;
+                this.spin = 0;
+            }
+
+            update() {
+                this.vy += GRAVITY * 0.75;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+
+                this.rotation += this.spin + (this.vx * 0.05);
+                this.spin *= 0.98;
+
+                // Batas Atas Atap
+                if (this.y < this.radius) {
+                    this.y = this.radius;
+                    this.vy = -this.vy * 0.8;
+                    audio.playWhip();
+                }
+                
+                // Batas Tembok Samping Kiri/Kanan
+                if (this.x < this.radius) {
+                    this.x = this.radius;
+                    this.vx = -this.vx * 0.8;
+                    audio.playWhip();
+                }
+                if (this.x > 800 - this.radius) {
+                    this.x = 800 - this.radius;
+                    this.vx = -this.vx * 0.8;
+                    audio.playWhip();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+
+                // Strip Warna Garis Bola Voli Pantai Tradisional
+                const colors = ['#3b82f6', '#fbbf24', '#ffffff'];
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, (i * Math.PI * 2) / 3, ((i + 1) * Math.PI * 2) / 3);
+                    ctx.lineTo(0, 0);
+                    ctx.fillStyle = colors[i];
+                    ctx.fill();
+                }
+
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.radius * 0.5, this.radius, 1.2, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        class Net {
+            constructor() {
+                this.x = 400;
+                this.width = 10;
+                this.height = 120;
+                this.y = 400 - this.height;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(this.x - 3, this.y, 6, this.height);
+
+                ctx.fillStyle = '#f43f5e';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Jaring-Jaring Net
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 1;
+                for (let h = this.y + 10; h < 400; h += 12) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - 12, h);
+                    ctx.lineTo(this.x + 12, h);
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(this.x - 6, this.y, 12, 10);
+                
+                ctx.restore();
+            }
+        }
+
+        // --- KELAS WASIT INTERAKTIF ---
+        class Wasit {
+            constructor() {
+                this.x = 400; // Sejajar dengan Net tengah
+                this.y = 200; // Ketinggian duduk di atas kursi wasit tinggi
+            }
+
+            draw() {
+                ctx.save();
+                
+                // 1. Gambar Struktur Kursi Tinggi Wasit (Referee Stand)
+                ctx.strokeStyle = '#94a3b8'; // Abu-abu metalik
+                ctx.lineWidth = 4;
+                // Tiang tangga kursi
+                ctx.beginPath();
+                ctx.moveTo(this.x - 12, 400);
+                ctx.lineTo(this.x - 6, this.y + 20);
+                ctx.moveTo(this.x + 12, 400);
+                ctx.lineTo(this.x + 6, this.y + 20);
+                // Anak tangga penopang kaki
+                for (let h = 240; h < 400; h += 40) {
+                    ctx.moveTo(this.x - 10, h);
+                    ctx.lineTo(this.x + 10, h);
+                }
+                ctx.stroke();
+
+                // Papan dudukan kursi merah cerah
+                ctx.fillStyle = '#ef4444'; 
+                ctx.fillRect(this.x - 11, this.y + 12, 22, 7);
+                ctx.fillRect(this.x - 13, this.y + 4, 3, 12); // Sandaran lengan kiri
+                ctx.fillRect(this.x + 10, this.y + 4, 3, 12);  // Sandaran lengan kanan
+                ctx.fillRect(this.x - 11, this.y - 10, 3, 22); // Sandaran punggung belakang
+
+                // 2. Gambar Tubuh Chibi Wasit Pantai
+                const skinColor = '#fed7aa';
+                
+                // Kaki yang menjuntai ke bawah dari kursi
+                ctx.strokeStyle = skinColor;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(this.x - 4, this.y + 12);
+                ctx.lineTo(this.x - 4, this.y + 26);
+                ctx.moveTo(this.x + 4, this.y + 12);
+                ctx.lineTo(this.x + 4, this.y + 26);
+                ctx.stroke();
+                // Sepatu putih wasit
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x - 4, this.y + 26, 3, 0, Math.PI * 2);
+                ctx.arc(this.x + 4, this.y + 26, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Baju dinas wasit bergaris hitam-putih vertikal
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(this.x - 8, this.y - 8, 16, 20);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(this.x - 6, this.y - 8, 2, 20);
+                ctx.fillRect(this.x - 2, this.y - 8, 2, 20);
+                ctx.fillRect(this.x + 2, this.y - 8, 2, 20);
+                ctx.fillRect(this.x + 5, this.y - 8, 2, 20);
+
+                // Kepala Wasit
+                ctx.fillStyle = skinColor;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - 18, 9, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rambut hitam klimis rapi
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - 21, 9, Math.PI, 0);
+                ctx.fill();
+
+                // Topi Putih Khas Wasit Pantai
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - 23, 7, Math.PI * 1.1, Math.PI * 1.9);
+                ctx.fill();
+                // Moncong depan topi
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - 25);
+                ctx.lineTo(this.x + 12, this.y - 21);
+                ctx.stroke();
+
+                // Mata Wasit - Secara interaktif menatap lokasi Bola voli!
+                const dx = ball.x - this.x;
+                const dy = ball.y - (this.y - 18);
+                const angle = Math.atan2(dy, dx);
+                const eyeOffset = 2; // Radius bola mata bergerak
+                const pupilX = this.x + Math.cos(angle) * eyeOffset;
+                const pupilY = this.y - 18 + Math.sin(angle) * eyeOffset;
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.x - 3, this.y - 18, 2.5, 0, Math.PI * 2);
+                ctx.arc(this.x + 3, this.y - 18, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(pupilX - 3, pupilY, 1.2, 0, Math.PI * 2);
+                ctx.arc(pupilX + 3, pupilY, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Lengan tangan wasit yang bersandar di kursi
+                ctx.strokeStyle = skinColor;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(this.x - 8, this.y - 4);
+                ctx.lineTo(this.x - 12, this.y + 6);
+                ctx.moveTo(this.x + 8, this.y - 4);
+                ctx.lineTo(this.x + 12, this.y + 6);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        // --- DEKORASI AWAN DAN LAUT PANTAI ---
+        const clouds = [
+            { x: 100, y: 50, speed: 0.2, size: 30 },
+            { x: 380, y: 90, speed: 0.15, size: 25 },
+            { x: 650, y: 60, speed: 0.25, size: 35 }
+        ];
+
+        let waveOffset = 0;
+
+        function drawBackground() {
+            // Gradasi Langit Senja Sunset Tropis
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, 450);
+            skyGrad.addColorStop(0, '#1e1b4b');
+            skyGrad.addColorStop(0.4, '#4c1d95');
+            skyGrad.addColorStop(0.7, '#be185d');
+            skyGrad.addColorStop(0.95, '#f59e0b');
+            skyGrad.addColorStop(1, '#ffedd5');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, 800, 450);
+
+            // Matahari Raksasa
+            ctx.fillStyle = '#ffedd5';
+            ctx.shadowBlur = 40;
+            ctx.shadowColor = '#f97316';
+            ctx.beginPath();
+            ctx.arc(400, 240, 70, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Awan Paralaks
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+            clouds.forEach(c => {
+                c.x += c.speed;
+                if (c.x > 850) c.x = -100;
+
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+                ctx.arc(c.x + c.size * 0.6, c.y - c.size * 0.2, c.size * 0.8, 0, Math.PI * 2);
+                ctx.arc(c.x - c.size * 0.6, c.y - c.size * 0.1, c.size * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Siluet Pohon Kelapa
+            ctx.fillStyle = '#2e1065';
+            // Kiri
+            ctx.beginPath();
+            ctx.moveTo(20, 400);
+            ctx.quadraticCurveTo(60, 280, 50, 200);
+            ctx.lineTo(55, 200);
+            ctx.quadraticCurveTo(65, 280, 25, 400);
+            ctx.closePath();
+            ctx.fill();
+            ctx.save();
+            ctx.translate(52, 200);
+            for (let i = 0; i < 6; i++) {
+                ctx.rotate(Math.PI / 3);
+                ctx.beginPath();
+                ctx.ellipse(0, 20, 8, 30, Math.PI/12, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // Kanan
+            ctx.beginPath();
+            ctx.moveTo(780, 400);
+            ctx.quadraticCurveTo(740, 290, 750, 180);
+            ctx.lineTo(745, 180);
+            ctx.quadraticCurveTo(735, 290, 775, 400);
+            ctx.closePath();
+            ctx.fill();
+            ctx.save();
+            ctx.translate(747, 180);
+            for (let i = 0; i < 6; i++) {
+                ctx.rotate(Math.PI / 3);
+                ctx.beginPath();
+                ctx.ellipse(0, 25, 8, 35, -Math.PI/12, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // Ombak Samudra Paralaks
+            waveOffset += 0.02;
+            ctx.fillStyle = '#1e1b4b';
+            ctx.beginPath();
+            ctx.moveTo(0, 400);
+            for (let x = 0; x <= 800; x += 10) {
+                const y = Math.sin(x * 0.02 + waveOffset) * 6 + 320;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(800, 400);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#4338ca';
+            ctx.beginPath();
+            ctx.moveTo(0, 400);
+            for (let x = 0; x <= 800; x += 15) {
+                const y = Math.sin(x * 0.015 - waveOffset * 1.5) * 5 + 325;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(800, 400);
+            ctx.closePath();
+            ctx.fill();
+
+            // Pasir Pantai
+            ctx.fillStyle = COLOR_SAND;
+            ctx.fillRect(0, 395, 800, 55);
+
+            // Garis Batas Lapangan Voli Pantai (Garis putih rapi untuk OUT vs IN - DILEBARKAN MENJADI KOORDINAT 40 S.D 760)
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(40, 395);
+            ctx.lineTo(40, 410);
+            ctx.moveTo(40, 395);
+            ctx.lineTo(760, 395);
+            ctx.moveTo(760, 395);
+            ctx.lineTo(760, 410);
+            ctx.stroke();
+
+            // Batas Buih Ombak di Pasir bagian atas
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 395);
+            ctx.quadraticCurveTo(400, 390, 800, 395);
+            ctx.stroke();
+        }
+
+        // --- SISTEM DETEKSI MATCH POINT PINTAR (TERMASUK DEUCE) ---
+        function drawCanvasAlerts() {
+            const p1MatchPoint = (scoreP1 === winningScore - 1 && scoreP2 <= winningScore - 2) || (scoreP1 >= winningScore && scoreP1 - scoreP2 === 1);
+            const p2MatchPoint = (scoreP2 === winningScore - 1 && scoreP1 <= winningScore - 2) || (scoreP2 >= winningScore && scoreP2 - scoreP1 === 1);
+            const isMatchPoint = p1MatchPoint || p2MatchPoint;
+            
+            if (isMatchPoint) {
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+                ctx.fillRect(0, 0, 800, 450);
+                
+                ctx.font = '900 24px "Fredoka One", sans-serif';
+                ctx.fillStyle = '#f43f5e';
+                ctx.textAlign = 'center';
+                ctx.fillText(' MATCH POINT ', 400, 50);
+            }
+        }
+
+        // Inisialisasi Objek Game
+        const p1 = new Player(180, 250, true);
+        const p2 = new Player(620, 250, false);
+        const wasit = new Wasit();
+        const ball = new Ball();
+        const net = new Net();
+
+        const keys = {};
+        const touch = {
+            left: false,
+            right: false,
+            jump: false
+        };
+
+        // --- SISTEM PEMANTAU KEYBOARD ---
+        window.addEventListener('keydown', e => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                e.preventDefault();
+                togglePause();
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                e.preventDefault();
+                if (gameMode !== 'online') {
+                    restartMatch();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', e => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // --- DETEKSI TABRAKAN FISIK ---
+        function checkBallPlayerCollision(player) {
+            // Pada mode online, hanya Host (P1) yang menangani otorisasi fisika bola dan tabrakan
+            if (gameMode === 'online' && !isOnlineHost) return;
+
+            const dx = ball.x - player.x;
+            const dy = ball.y - player.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const minDist = ball.radius + player.radius;
+
+            if (dist < minDist) {
+                const nx = dx / dist;
+                const ny = dy / dist;
+
+                const overlap = minDist - dist;
+                ball.x += nx * overlap;
+                ball.y += ny * overlap;
+
+                const rvx = ball.vx - player.vx;
+                const rvy = ball.vy - player.vy;
+                const velAlongNormal = rvx * nx + rvy * ny;
+
+                if (velAlongNormal < 0) {
+                    const restitution = 1.05;
+                    let impulse = -(1 + restitution) * velAlongNormal;
+                    
+                    ball.vx += nx * impulse + (player.vx * 0.4);
+                    ball.vy = ny * impulse + Math.min(player.vy * 0.7, -2);
+
+                    const maxSpeed = 16;
+                    const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+                    if (speed > maxSpeed) {
+                        ball.vx = (ball.vx / speed) * maxSpeed;
+                        ball.vy = (ball.vy / speed) * maxSpeed;
+                    }
+
+                    ball.spin = (ball.vx - player.vx) * 0.15;
+
+                    audio.playHit();
+                    createHitSparks(ball.x - nx * ball.radius, ball.y - ny * ball.radius);
+
+                    // Melacak siapa penyentuh terakhir
+                    if (player.isLeft) {
+                        lastTouchBy = 1;
+                        p1Touches++;
+                        p2Touches = 0;
+                        if (p1Touches > 3) {
+                            audio.playWhistle('out');
+                            scorePoint(2, "Pemain 1: Lebih dari 3 Sentuhan!");
+                            return;
+                        }
+                    } else {
+                        lastTouchBy = 2;
+                        p2Touches++;
+                        p1Touches = 0;
+                        if (p2Touches > 3) {
+                            audio.playWhistle('out');
+                            scorePoint(1, gameMode === 'cpu' ? "CPU: Lebih dari 3 Sentuhan!" : "Pemain 2: Lebih dari 3 Sentuhan!");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkBallNetCollision() {
+            if (gameMode === 'online' && !isOnlineHost) return;
+
+            const closestX = Math.max(net.x - net.width/2, Math.min(ball.x, net.x + net.width/2));
+            const closestY = Math.max(net.y, Math.min(ball.y, 400));
+
+            const dx = ball.x - closestX;
+            const dy = ball.y - closestY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < ball.radius) {
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    ball.x = dx > 0 ? net.x + net.width/2 + ball.radius : net.x - net.width/2 - ball.radius;
+                    ball.vx = -ball.vx * 0.75;
+                } else {
+                    ball.y = net.y - ball.radius;
+                    ball.vy = -ball.vy * 0.75;
+                }
+                audio.playWhip();
+                createHitSparks(ball.x, ball.y);
+            }
+        }
+
+        // --- LOGIKA KECERDASAN BUATAN (CPU AI) ---
+        function runCpuAI() {
+            if (gameMode !== 'cpu') return;
+
+            const targetX = ball.x;
+            let reactionDelay = 0.2;
+            let errorMargin = 30;
+            let jumpTendency = 0.4;
+
+            if (cpuDifficulty === 'easy') {
+                reactionDelay = 0.45;
+                errorMargin = 60;
+                jumpTendency = 0.15;
+            } else if (cpuDifficulty === 'medium') {
+                reactionDelay = 0.2;
+                errorMargin = 30;
+                jumpTendency = 0.4;
+            } else if (cpuDifficulty === 'hard') {
+                reactionDelay = 0.05;
+                errorMargin = 8;
+                jumpTendency = 0.65;
+            }
+
+            const isBallTargeted = ball.vx > -1 || ball.x > 320;
+
+            if (isBallTargeted) {
+                let trackX = targetX;
+                if (cpuDifficulty === 'hard' && ball.vy > 0) {
+                    const fallTime = Math.max(0, (360 - ball.y) / Math.max(0.1, ball.vy));
+                    trackX = ball.x + ball.vx * fallTime;
+                }
+
+                const diff = trackX - p2.x;
+                if (Math.abs(diff) > errorMargin) {
+                    p2.vx = diff > 0 ? p2.speed * (1 - reactionDelay) : -p2.speed * (1 - reactionDelay);
+                } else {
+                    p2.vx = 0;
+                }
+
+                const distToBall = Math.sqrt(Math.pow(p2.x - ball.x, 2) + Math.pow(p2.y - ball.y, 2));
+                if (distToBall < 120 && ball.y < p2.y - 10 && ball.vy > -1 && Math.random() < jumpTendency) {
+                    if (p2.isGrounded) {
+                        p2.vy = p2.jumpStrength;
+                        audio.playJump();
+                    }
+                }
+            } else {
+                const homeX = 600;
+                const homeDiff = homeX - p2.x;
+                if (Math.abs(homeDiff) > 20) {
+                    p2.vx = homeDiff > 0 ? p2.speed * 0.5 : -p2.speed * 0.5;
+                } else {
+                    p2.vx = 0;
+                }
+            }
+        }
+
+        // --- SISTEM SKOR, URUTAN MAIN, DAN LOGIKA JUS (DEUCE) ---
+        function scorePoint(winner, customNoticeText) {
+            audio.playScore();
+            
+            p1Touches = 0;
+            p2Touches = 0;
+
+            if (winner === 1) {
+                scoreP1++;
+                document.getElementById('p1Score').innerText = scoreP1;
+                createScoreExplosion(ball.x, ball.y, COLOR_P1);
+                showNotice(customNoticeText || "Pemain 1 MENCETAK POIN!");
+                serviceTurn = 1;
+            } else {
+                scoreP2++;
+                document.getElementById('p2Score').innerText = scoreP2;
+                createScoreExplosion(ball.x, ball.y, COLOR_P2);
+                showNotice(customNoticeText || (gameMode === 'cpu' ? "CPU MENCETAK POIN!" : "Pemain 2 MENCETAK POIN!"));
+                serviceTurn = 2;
+            }
+
+            // --- SISTEM ATURAN DEUCE (JUS 2 POIN) ---
+            if (scoreP1 >= winningScore || scoreP2 >= winningScore) {
+                const diff = Math.abs(scoreP1 - scoreP2);
+                if (diff >= 2) {
+                    if (scoreP1 > scoreP2) {
+                        endGame(1);
+                    } else {
+                        endGame(2);
+                    }
+                    return;
+                } else {
+                    if (scoreP1 === scoreP2) {
+                        audio.playWhistle('serve');
+                        showNotice("DEUCE! JUS 2 POIN");
+                    } else {
+                        const leadingName = scoreP1 > scoreP2 ? "Pemain 1" : (gameMode === 'cpu' ? "CPU" : "Pemain 2");
+                        showNotice(`ADVANTAGE ${leadingName}!`);
+                    }
+                }
+            }
+
+            resetPositions();
+        }
+
+        function resetPositions() {
+            p1.reset();
+            p2.reset();
+            ball.reset(serviceTurn);
+            p1Touches = 0;
+            p2Touches = 0;
+            lastTouchBy = 0;
+
+            // Bunyikan peluit awal bermain
+            audio.playWhistle('serve');
+        }
+
+        function showNotice(text) {
+            const el = document.getElementById('gameNotice');
+            el.innerText = text;
+            el.classList.remove('hidden');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 1800);
+        }
+
+        // --- REAL-TIME MULTIPLAYER SYNCHRONIZATION via FIRESTORE ---
+        async function syncOnlineState() {
+            if (gameMode !== 'online' || !onlineRoomId || !currentUser) return;
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', onlineRoomId);
+            const now = Date.now();
+
+            if (now - lastFirebaseUpdate >= FIREBASE_THROTTLE) {
+                lastFirebaseUpdate = now;
+
+                try {
+                    if (isOnlineHost) {
+                        // Host (P1): Mengirim posisi P1, Bola, Skor, Sentuhan, dan Status Aktif
+                        await updateDoc(roomRef, {
+                            p1: { x: p1.x, y: p1.y, vx: p1.vx, vy: p1.vy },
+                            ball: { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy, spin: ball.spin, rotation: ball.rotation },
+                            scoreP1: scoreP1,
+                            scoreP2: scoreP2,
+                            p1Touches: p1Touches,
+                            p2Touches: p2Touches,
+                            lastTouchBy: lastTouchBy,
+                            serviceTurn: serviceTurn,
+                            lastActive: now
+                        });
+                    } else {
+                        // Guest (P2): Hanya mengirim posisi P2 miliknya sendiri
+                        await updateDoc(roomRef, {
+                            p2: { x: p2.x, y: p2.y, vx: p2.vx, vy: p2.vy },
+                            lastActive: now
+                        });
+                    }
+                } catch (e) {
+                    console.error("Gagal menyinkronkan status online: ", e);
+                }
+            }
+        }
+
+        // Mendengarkan perubahan data Room secara langsung dari Firestore
+        function listenToOnlineRoom(roomId) {
+            if (roomUnsubscribe) roomUnsubscribe();
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+            
+            roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const data = snapshot.data();
+
+                // Lobi: Deteksi jika tamu bergabung
+                if (isOnlineHost && data.status === 'playing' && !gameActive) {
+                    document.getElementById('lobbyStatus').innerText = "Lawan Terhubung! Memulai...";
+                    setTimeout(() => {
+                        startMatch();
+                    }, 1500);
+                }
+
+                // Saat Game Aktif: Ambil data posisi pemain lain & bola
+                if (gameActive) {
+                    if (isOnlineHost) {
+                        // Host (P1) mengambil posisi P2 yang dikirim oleh tamu
+                        if (data.p2) {
+                            netTargetP2 = data.p2;
+                        }
+                    } else {
+                        // Guest (P2) mengambil posisi P1, Bola, Skor, Sentuhan dari Host
+                        if (data.p1) netTargetP1 = data.p1;
+                        if (data.ball) netTargetBall = data.ball;
+                        
+                        // Sinkronkan Skor & Sentuhan secara pasif
+                        if (data.scoreP1 !== undefined && data.scoreP1 !== scoreP1) {
+                            scoreP1 = data.scoreP1;
+                            document.getElementById('p1Score').innerText = scoreP1;
+                        }
+                        if (data.scoreP2 !== undefined && data.scoreP2 !== scoreP2) {
+                            scoreP2 = data.scoreP2;
+                            document.getElementById('p2Score').innerText = scoreP2;
+                        }
+
+                        p1Touches = data.p1Touches || 0;
+                        p2Touches = data.p2Touches || 0;
+                        lastTouchBy = data.lastTouchBy || 0;
+                        serviceTurn = data.serviceTurn || 1;
+                    }
+
+                    // Deteksi Selesai Game dari database pada Guest
+                    if (!isOnlineHost && data.status === 'ended') {
+                        gameActive = false;
+                        endGame(data.winner);
+                    }
+                }
+            }, (err) => {
+                console.error("Kesalahan langganan Snapshot Room: ", err);
+            });
+        }
+
+        // --- SIMULASI UPDATE GAME ---
+        function updateGame() {
+            if (!gameActive || isPaused) return;
+
+            // Kontrol Pemain 1
+            if (gameMode !== 'online' || isOnlineHost) {
+                if (keys['a'] || keys['arrowleft'] || touch.left) {
+                    p1.vx = -p1.speed;
+                } else if (keys['d'] || keys['arrowright'] || touch.right) {
+                    p1.vx = p1.speed;
+                }
+
+                if ((keys['w'] || keys['arrowup'] || touch.jump) && p1.isGrounded) {
+                    p1.vy = p1.jumpStrength;
+                    audio.playJump();
+                    touch.jump = false;
+                }
+                p1.update({ left: 0, right: 395 });
+            } else {
+                p1.x += (netTargetP1.x - p1.x) * 0.3;
+                p1.y += (netTargetP1.y - p1.y) * 0.3;
+                p1.vx = netTargetP1.vx || 0;
+                p1.vy = netTargetP1.vy || 0;
+            }
+
+            // Kontrol Pemain 2
+            if (gameMode === 'local') {
+                if (keys['j']) {
+                    p2.vx = -p2.speed;
+                } else if (keys['l']) {
+                    p2.vx = p2.speed;
+                }
+
+                if (keys['i'] && p2.isGrounded) {
+                    p2.vy = p2.jumpStrength;
+                    audio.playJump();
+                }
+                p2.update({ left: 405, right: 800 });
+            } else if (gameMode === 'online' && !isOnlineHost) {
+                if (keys['a'] || keys['arrowleft'] || touch.left) {
+                    p2.vx = -p2.speed;
+                } else if (keys['d'] || keys['arrowright'] || touch.right) {
+                    p2.vx = p2.speed;
+                }
+
+                if ((keys['w'] || keys['arrowup'] || touch.jump) && p2.isGrounded) {
+                    p2.vy = p2.jumpStrength;
+                    audio.playJump();
+                    touch.jump = false;
+                }
+                p2.update({ left: 405, right: 800 });
+            } else if (gameMode === 'online' && isOnlineHost) {
+                p2.x += (netTargetP2.x - p2.x) * 0.3;
+                p2.y += (netTargetP2.y - p2.y) * 0.3;
+                p2.vx = netTargetP2.vx || 0;
+                p2.vy = netTargetP2.vy || 0;
+            } else {
+                runCpuAI();
+                p2.update({ left: 405, right: 800 });
+            }
+
+            // Pembaruan Fisika Bola
+            if (gameMode !== 'online' || isOnlineHost) {
+                ball.update();
+            } else {
+                ball.x += (netTargetBall.x - ball.x) * 0.35;
+                ball.y += (netTargetBall.y - ball.y) * 0.35;
+                ball.vx = netTargetBall.vx || 0;
+                ball.vy = netTargetBall.vy || 0;
+                ball.rotation = netTargetBall.rotation || 0;
+                ball.spin = netTargetBall.spin || 0;
+            }
+
+            // Tabrakan Fisik
+            if (gameMode !== 'online' || isOnlineHost) {
+                checkBallPlayerCollision(p1);
+                checkBallPlayerCollision(p2);
+                checkBallNetCollision();
+
+                if (ball.y >= 395 - ball.radius) {
+                    const isInside = (ball.x >= 40 && ball.x <= 760);
+
+                    if (isInside) {
+                        audio.playWhistle('in');
+                        if (ball.x < 400) {
+                            scorePoint(2, "IN! Poin untuk Lawan");
+                        } else {
+                            scorePoint(1, "IN! Poin untuk Pemain 1");
+                        }
+                    } else {
+                        audio.playWhistle('out');
+                        let pointWinner = 0;
+                        if (ball.x < 400) {
+                            pointWinner = (lastTouchBy === 2) ? 1 : 2;
+                        } else {
+                            pointWinner = (lastTouchBy === 1) ? 2 : 1;
+                        }
+
+                        if (pointWinner === 1) {
+                            scorePoint(1, "OUT! Poin untuk Pemain 1");
+                        } else {
+                            scorePoint(2, "OUT! Poin untuk Lawan");
+                        }
+                    }
+                }
+            }
+
+            if (gameMode === 'online') {
+                syncOnlineState();
+            }
+
+            // Pembaruan sistem partikel ledakan skor
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1;
+                p.alpha -= p.decay;
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // --- RENDERING CANVAS ---
+        function render() {
+            ctx.clearRect(0, 0, 800, 450);
+
+            drawBackground();
+
+            wasit.draw();
+            net.draw();
+            p1.draw();
+            p2.draw();
+            ball.draw();
+
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            drawCanvasAlerts();
+        }
+
+        function tick() {
+            updateGame();
+            render();
+            requestAnimationFrame(tick);
+        }
+
+        // --- INTERAKSI INTERFACE OVERLAY ---
+        function startMatch() {
+            document.getElementById('menuOverlay').classList.add('hidden');
+            document.getElementById('gameScoreboard').classList.remove('hidden');
+            document.getElementById('btnExitMatch').classList.remove('hidden'); // Tampilkan tombol keluar saat laga berjalan
+            
+            scoreP1 = 0;
+            scoreP2 = 0;
+            document.getElementById('p1Score').innerText = 0;
+            document.getElementById('p2Score').innerText = 0;
+            document.getElementById('winScoreDisplay').innerText = winningScore;
+
+            if (gameMode === 'local') {
+                document.getElementById('p2NameDisplay').innerText = "Pemain 2";
+                document.getElementById('p2RoleTag').innerText = "Pesaing";
+                document.getElementById('p2RoleTag').className = "text-[10px] bg-pink-500/10 text-pink-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider w-max ml-auto border border-pink-500/20 mt-0.5";
+                document.getElementById('p2AvatarDisplay').innerText = "🍹";
+            } else if (gameMode === 'online') {
+                document.getElementById('p2AvatarDisplay').innerText = "⚡";
+                if (isOnlineHost) {
+                    document.getElementById('p1NameDisplay').innerText = "Anda (P1)";
+                    document.getElementById('p2NameDisplay').innerText = "Lawan (Online)";
+                    document.getElementById('p2RoleTag').innerText = "Tamu P2";
+                } else {
+                    document.getElementById('p1NameDisplay').innerText = "Lawan (Online)";
+                    document.getElementById('p2NameDisplay').innerText = "Anda (P2)";
+                    document.getElementById('p2RoleTag').innerText = "Tamu P2";
+                }
+                document.getElementById('p2RoleTag').className = "text-[10px] bg-pink-500/10 text-pink-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider w-max ml-auto border border-pink-500/20 mt-0.5";
+            } else {
+                let diffText = "Mudah";
+                if (cpuDifficulty === 'medium') diffText = "Sedang";
+                if (cpuDifficulty === 'hard') diffText = "Sulit";
+                document.getElementById('p2NameDisplay').innerText = `CPU (${diffText})`;
+                document.getElementById('p2RoleTag').innerText = "Bot AI";
+                document.getElementById('p2AvatarDisplay').innerText = "🍹";
+            }
+
+            resetPositions();
+            gameActive = true;
+            isPaused = false;
+            
+            showNotice("PERMAINAN VOLI PANTAI DIMULAI!");
+            audio.playScore();
+
+            if (isTouchDevice()) {
+                document.getElementById('mobileControls').classList.remove('hidden');
+            }
+        }
+
+        function togglePause() {
+            if (gameMode === 'online') return;
+            if (!gameActive) return;
+            isPaused = !isPaused;
+            const overlay = document.getElementById('pauseOverlay');
+            if (isPaused) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function restartMatch() {
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            document.getElementById('pauseOverlay').classList.add('hidden');
+            startMatch();
+        }
+
+        async function endGame(winner) {
+            gameActive = false;
+            const gameOver = document.getElementById('gameOverOverlay');
+            const header = document.getElementById('victoryHeader');
+            const sub = document.getElementById('victorySub');
+            const emoji = document.getElementById('victoryEmoji');
+
+            gameOver.classList.remove('hidden');
+            document.getElementById('btnExitMatch').classList.add('hidden'); // Sembunyikan tombol keluar saat layar kemenangan/kalah muncul
+
+            if (gameMode === 'online') {
+                if (isOnlineHost) {
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', onlineRoomId);
+                    await updateDoc(roomRef, { status: 'ended', winner: winner });
+                }
+
+                if ((isOnlineHost && winner === 1) || (!isOnlineHost && winner === 2)) {
+                    emoji.innerText = "👑";
+                    header.innerText = "ANDA MENANG!";
+                    header.className = "title-font text-3xl text-cyan-400 mb-1";
+                    sub.innerText = `Skor akhir pertandingan online: ${scoreP1} - ${scoreP2}`;
+                } else {
+                    emoji.innerText = "🏐";
+                    header.innerText = "LAWAN MENANG!";
+                    header.className = "title-font text-3xl text-pink-500 mb-1";
+                    sub.innerText = `Lawan mengamankan kemenangan: ${scoreP2} - ${scoreP1}`;
+                }
+
+                document.getElementById('rematchBtn').classList.add('hidden');
+            } else {
+                document.getElementById('rematchBtn').classList.remove('hidden');
+                if (winner === 1) {
+                    emoji.innerText = "🏆";
+                    header.innerText = "PEMAIN 1 MENANG!";
+                    header.className = "title-font text-3xl text-cyan-400 mb-1";
+                    sub.innerText = `Kemenangan gemilang dengan skor ${scoreP1} - ${scoreP2}!`;
+                } else {
+                    emoji.innerText = "🥥";
+                    if (gameMode === 'cpu') {
+                        header.innerText = "CPU MENGALAHKANMU!";
+                        header.className = "title-font text-3xl text-pink-500 mb-1";
+                        sub.innerText = "Jangan menyerah! Ayo latih kembali refleksmu di atas pasir!";
+                    } else {
+                        header.innerText = "PEMAIN 2 MENANG!";
+                        header.className = "title-font text-3xl text-pink-500 mb-1";
+                        sub.innerText = `Kemenangan mutlak yang epik dengan skor ${scoreP2} - ${scoreP1}!`;
+                    }
+                }
+            }
+        }
+
+        function isTouchDevice() {
+            return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        }
+
+        // TETHERING TOMBOL KE LOGIKA GAME
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            if (gameMode === 'online') {
+                if (!onlineRoomId) {
+                    showNotice("Silakan buat room atau gabung terlebih dahulu!");
+                    return;
+                }
+                if (!isOnlineHost) {
+                    showNotice("Hanya pembuat room yang dapat memulai pertandingan!");
+                    return;
+                }
+            }
+            audio.init();
+            startMatch();
+        });
+
+        // Tombol Keluar dari Laga Tengah Berlangsung
+        document.getElementById('btnExitMatch').addEventListener('click', () => {
+            if (gameMode === 'online') {
+                if (roomUnsubscribe) {
+                    roomUnsubscribe();
+                    roomUnsubscribe = null;
+                }
+                onlineRoomId = null;
+                isOnlineHost = false;
+                document.getElementById('roomCreatedArea').classList.add('hidden');
+                document.getElementById('roomJoinArea').classList.add('hidden');
+            }
+            
+            gameActive = false;
+            isPaused = false;
+            
+            // Sembunyikan HUD permainan & Tampilkan Menu Utama
+            document.getElementById('gameScoreboard').classList.add('hidden');
+            document.getElementById('btnExitMatch').classList.add('hidden');
+            document.getElementById('menuOverlay').classList.remove('hidden');
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            document.getElementById('pauseOverlay').classList.add('hidden');
+            
+            p1.reset();
+            p2.reset();
+            ball.reset(1);
+        });
+
+        document.getElementById('resumeBtn').addEventListener('click', () => {
+            togglePause();
+        });
+
+        document.getElementById('rematchBtn').addEventListener('click', () => {
+            restartMatch();
+        });
+
+        document.getElementById('menuReturnBtn').addEventListener('click', () => {
+            document.getElementById('gameOverOverlay').classList.add('hidden');
+            document.getElementById('gameScoreboard').classList.add('hidden');
+            document.getElementById('btnExitMatch').classList.add('hidden');
+            document.getElementById('menuOverlay').classList.remove('hidden');
+            
+            if (roomUnsubscribe) {
+                roomUnsubscribe();
+                roomUnsubscribe = null;
+            }
+            onlineRoomId = null;
+            isOnlineHost = false;
+            document.getElementById('roomCreatedArea').classList.add('hidden');
+            document.getElementById('roomJoinArea').classList.add('hidden');
+        });
+
+        document.getElementById('muteBtn').addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            const icon = document.getElementById('muteIcon');
+            if (audio.muted) {
+                icon.setAttribute('data-lucide', 'volume-x');
+            } else {
+                icon.setAttribute('data-lucide', 'volume-2');
+            }
+            lucide.createIcons();
+        });
+
+        const rules = document.getElementById('rulesOverlay');
+        document.getElementById('rulesBtn').addEventListener('click', () => rules.classList.remove('hidden'));
+        document.getElementById('closeRulesBtn').addEventListener('click', () => rules.classList.add('hidden'));
+
+        // --- SWITCH MODE GAME ---
+        const modeCpu = document.getElementById('modeCpu');
+        const modeLocal = document.getElementById('modeLocal');
+        const modeOnline = document.getElementById('modeOnline');
+        const cpuSettingsDiv = document.getElementById('cpuSettings');
+        const onlinePanel = document.getElementById('onlinePanel');
+        const ptsContainer = document.getElementById('ptsContainer');
+
+        function clearActiveModes() {
+            [modeCpu, modeLocal, modeOnline].forEach(btn => {
+                btn.className = "py-2.5 px-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] flex items-center justify-center gap-1 transition duration-150";
+            });
+            cpuSettingsDiv.classList.add('hidden');
+            onlinePanel.classList.add('hidden');
+            ptsContainer.classList.remove('hidden');
+            document.getElementById('startGameBtn').classList.remove('hidden');
+        }
+
+        modeCpu.addEventListener('click', () => {
+            gameMode = 'cpu';
+            clearActiveModes();
+            modeCpu.className = "py-2.5 px-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 text-amber-400 font-bold text-[11px] flex items-center justify-center gap-1 transition duration-150";
+            cpuSettingsDiv.classList.remove('hidden');
+        });
+
+        modeLocal.addEventListener('click', () => {
+            gameMode = 'local';
+            clearActiveModes();
+            modeLocal.className = "py-2.5 px-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 text-amber-400 font-bold text-[11px] flex items-center justify-center gap-1 transition duration-150";
+        });
+
+        modeOnline.addEventListener('click', () => {
+            gameMode = 'online';
+            clearActiveModes();
+            modeOnline.className = "py-2.5 px-2 rounded-xl border-2 border-amber-500 bg-amber-500/10 text-amber-400 font-bold text-[11px] flex items-center justify-center gap-1 transition duration-150";
+            onlinePanel.classList.remove('hidden');
+            ptsContainer.classList.add('hidden');
+            winningScore = 21;
+            
+            document.getElementById('startGameBtn').classList.add('hidden');
+        });
+
+        // --- OPERASI MULTIPLAYER ONLINE LOBBY ---
+        const btnCreateRoom = document.getElementById('btnCreateRoom');
+        const btnJoinRoomToggle = document.getElementById('btnJoinRoomToggle');
+        const roomCreatedArea = document.getElementById('roomCreatedArea');
+        const roomJoinArea = document.getElementById('roomJoinArea');
+        const displayRoomId = document.getElementById('displayRoomId');
+        const btnCopyRoomId = document.getElementById('btnCopyRoomId');
+        const btnSubmitJoinRoom = document.getElementById('btnSubmitJoinRoom');
+        const inputRoomId = document.getElementById('inputRoomId');
+        const btnShortcutId = document.getElementById('btnShortcutId');
+
+        // Tombol Pintasan ID Khusus "1324567"
+        btnShortcutId.addEventListener('click', async () => {
+            if (!currentUser) {
+                showNotice("Sedang menghubungkan ke server...");
+                return;
+            }
+
+            const customId = "1324567";
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', customId);
+
+            try {
+                // Periksa apakah Room dengan ID khusus 1324567 sudah ada di database
+                const roomSnap = await getDoc(roomRef);
+
+                if (roomSnap.exists()) {
+                    const data = roomSnap.data();
+                    // Jika room sedang kosong (waiting) atau pembuatnya adalah Anda sendiri, bergabunglah sebagai Tamu
+                    if (data.status === 'waiting' && data.hostId !== currentUser.uid) {
+                        await updateDoc(roomRef, {
+                            status: 'playing',
+                            guestId: currentUser.uid
+                        });
+                        onlineRoomId = customId;
+                        isOnlineHost = false;
+                        showNotice("Bergabung ke Room 1324567!");
+                        listenToOnlineRoom(customId);
+                        setTimeout(() => startMatch(), 1500);
+                    } else if (data.hostId === currentUser.uid) {
+                        // Jika Anda adalah pembuatnya, Anda masuk kembali sebagai Host
+                        onlineRoomId = customId;
+                        isOnlineHost = true;
+                        displayRoomId.innerText = customId;
+                        roomCreatedArea.classList.remove('hidden');
+                        roomJoinArea.classList.add('hidden');
+                        document.getElementById('lobbyStatus').innerText = data.guestId ? "Lawan Terhubung! Memulai..." : "Menunggu lawan bergabung...";
+                        listenToOnlineRoom(customId);
+                        if (data.guestId) {
+                            setTimeout(() => startMatch(), 1000);
+                        }
+                    } else {
+                        // Jika room penuh atau sedang bermain, tawarkan untuk mereset dan membuat ulang room
+                        await setDoc(roomRef, {
+                            status: 'waiting',
+                            hostId: currentUser.uid,
+                            guestId: null,
+                            winningScore: 21,
+                            p1: { x: 180, y: 250, vx: 0, vy: 0 },
+                            p2: { x: 620, y: 250, vx: 0, vy: 0 },
+                            ball: { x: 200, y: 120, vx: 0, vy: 0, spin: 0, rotation: 0 },
+                            scoreP1: 0,
+                            scoreP2: 0,
+                            p1Touches: 0,
+                            p2Touches: 0,
+                            lastTouchBy: 0,
+                            lastActive: Date.now()
+                        });
+                        onlineRoomId = customId;
+                        isOnlineHost = true;
+                        displayRoomId.innerText = customId;
+                        roomCreatedArea.classList.remove('hidden');
+                        roomJoinArea.classList.add('hidden');
+                        document.getElementById('lobbyStatus').innerText = "Room 1324567 Direset. Menunggu lawan...";
+                        listenToOnlineRoom(customId);
+                        showNotice("Room 1324567 berhasil dibuat ulang!");
+                    }
+                } else {
+                    // Jika Room belum ada di database, buat baru dengan ID ini
+                    await setDoc(roomRef, {
+                        status: 'waiting',
+                        hostId: currentUser.uid,
+                        guestId: null,
+                        winningScore: 21,
+                        p1: { x: 180, y: 250, vx: 0, vy: 0 },
+                        p2: { x: 620, y: 250, vx: 0, vy: 0 },
+                        ball: { x: 200, y: 120, vx: 0, vy: 0, spin: 0, rotation: 0 },
+                        scoreP1: 0,
+                        scoreP2: 0,
+                        p1Touches: 0,
+                        p2Touches: 0,
+                        lastTouchBy: 0,
+                        lastActive: Date.now()
+                    });
+                    onlineRoomId = customId;
+                    isOnlineHost = true;
+                    displayRoomId.innerText = customId;
+                    roomCreatedArea.classList.remove('hidden');
+                    roomJoinArea.classList.add('hidden');
+                    document.getElementById('lobbyStatus').innerText = "Menunggu lawan bergabung...";
+                    listenToOnlineRoom(customId);
+                    showNotice("Room 1324567 berhasil dibuat!");
+                }
+            } catch (err) {
+                console.error("Kesalahan ID khusus: ", err);
+                showNotice("Gagal memproses ID khusus.");
+            }
+        });
+
+        // Tombol Pembuat Room (Host)
+        btnCreateRoom.addEventListener('click', async () => {
+            if (!currentUser) {
+                showNotice("Sedang menghubungkan ke server...");
+                return;
+            }
+
+            const newRoomId = String(Math.floor(1000 + Math.random() * 9000));
+            onlineRoomId = newRoomId;
+            isOnlineHost = true;
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', newRoomId);
+            
+            try {
+                await setDoc(roomRef, {
+                    status: 'waiting',
+                    hostId: currentUser.uid,
+                    guestId: null,
+                    winningScore: 21,
+                    p1: { x: 180, y: 250, vx: 0, vy: 0 },
+                    p2: { x: 620, y: 250, vx: 0, vy: 0 },
+                    ball: { x: 200, y: 120, vx: 0, vy: 0, spin: 0, rotation: 0 },
+                    scoreP1: 0,
+                    scoreP2: 0,
+                    p1Touches: 0,
+                    p2Touches: 0,
+                    lastTouchBy: 0,
+                    lastActive: Date.now()
+                });
+
+                displayRoomId.innerText = newRoomId;
+                roomCreatedArea.classList.remove('hidden');
+                roomJoinArea.classList.add('hidden');
+                document.getElementById('lobbyStatus').innerText = "Menunggu lawan bergabung...";
+                
+                listenToOnlineRoom(newRoomId);
+                showNotice("Room berhasil dibuat!");
+            } catch (err) {
+                console.error("Gagal membuat dokumen room: ", err);
+                showNotice("Gagal membuat room. Silakan coba lagi.");
+            }
+        });
+
+        // Tombol Membuka Panel Gabung Room
+        btnJoinRoomToggle.addEventListener('click', () => {
+            roomJoinArea.classList.remove('hidden');
+            roomCreatedArea.classList.add('hidden');
+        });
+
+        // Tombol Penyalin ID Room
+        btnCopyRoomId.addEventListener('click', () => {
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = onlineRoomId || "";
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            try {
+                document.execCommand('copy');
+                showNotice("ID Room berhasil disalin!");
+            } catch (err) {
+                console.error("Gagal menyalin: ", err);
+            }
+            document.body.removeChild(tempTextArea);
+        });
+
+        // Submit Pengisian Kode untuk Bergabung (Guest)
+        btnSubmitJoinRoom.addEventListener('click', async () => {
+            const enteredId = inputRoomId.value.trim();
+            if (enteredId.length < 4) {
+                showNotice("Format ID Room tidak valid!");
+                return;
+            }
+
+            if (!currentUser) {
+                showNotice("Sedang menghubungkan ke server...");
+                return;
+            }
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', enteredId);
+            
+            try {
+                const roomSnap = await getDoc(roomRef);
+                if (!roomSnap.exists()) {
+                    showNotice("Room tidak ditemukan!");
+                    return;
+                }
+
+                const data = roomSnap.data();
+                if (data.status === 'playing' || data.status === 'ended') {
+                    showNotice("Pertandingan di Room ini sedang berlangsung/selesai!");
+                    return;
+                }
+
+                await updateDoc(roomRef, {
+                    status: 'playing',
+                    guestId: currentUser.uid
+                });
+
+                onlineRoomId = enteredId;
+                isOnlineHost = false;
+
+                showNotice("Berhasil terhubung! Mempersiapkan lapangan...");
+                
+                listenToOnlineRoom(enteredId);
+
+                setTimeout(() => {
+                    startMatch();
+                }, 1500);
+
+            } catch (err) {
+                console.error("Kesalahan bergabung room: ", err);
+                showNotice("Gagal terhubung ke lobi.");
+            }
+        });
+
+        // Tingkat Kesulitan
+        const diffBtns = document.querySelectorAll('.diffBtn');
+        diffBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                diffBtns.forEach(b => {
+                    b.className = "diffBtn py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-700 hover:bg-slate-700 transition";
+                });
+                btn.className = "diffBtn py-2 rounded-lg bg-amber-500/15 text-amber-400 font-bold text-xs border-2 border-amber-500/40 hover:bg-amber-500/20 transition";
+                cpuDifficulty = btn.getAttribute('data-diff');
+            });
+        });
+
+        // Batas Poin
+        const ptsBtns = document.querySelectorAll('.ptsBtn');
+        ptsBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                ptsBtns.forEach(b => {
+                    b.className = "ptsBtn py-2 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-700 hover:bg-slate-700 transition";
+                });
+                btn.className = "ptsBtn py-2 rounded-lg bg-amber-500/15 text-amber-400 font-bold text-xs border-2 border-amber-500/40 hover:bg-amber-500/20 transition";
+                winningScore = parseInt(btn.getAttribute('data-pts'));
+            });
+        });
+
+        // Kontrol Sentuh Mobile
+        const bLeft = document.getElementById('btnTouchLeft');
+        const bRight = document.getElementById('btnTouchRight');
+        const bJump = document.getElementById('btnTouchJump');
+
+        const preventBehaviors = e => {
+            if (e.cancelable) e.preventDefault();
+        };
+
+        bLeft.addEventListener('touchstart', e => { preventBehaviors(e); touch.left = true; });
+        bLeft.addEventListener('touchend', e => { touch.left = false; });
+        bRight.addEventListener('touchstart', e => { preventBehaviors(e); touch.right = true; });
+        bRight.addEventListener('touchend', e => { touch.right = false; });
+        
+        bJump.addEventListener('touchstart', e => { preventBehaviors(e); touch.jump = true; });
+        bJump.addEventListener('touchend', e => { touch.jump = false; });
+
+        lucide.createIcons();
+
+        // Mulai perulangan game
+        tick();
+    </script>
+</body>
+</html>
